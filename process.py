@@ -145,9 +145,26 @@ def download_and_save(entry: Entry):
         readme = TPL_WITH_BG.format(title=clean_title, content=entry["content"][0]["value"])
     with open(f"{file_dir}/README.md", "w") as f:
         f.write(readme)
+    quoted_file_dir = file_dir.replace(" ", "%20")
+    return f"[{clean_title}](./{quoted_file_dir}/README.md)"
+
+
+README_TPL = """# 小声喧哗文字资料存档
+
+```bash
+# Python3+
+pip install feedparser requests
+python process.py
+```
+
+{links}
+
+"""
 
 
 if __name__ == "__main__":
+    d = feedparser.parse("https://loudmurmursfm.com/feed/audio.xml")
     with Pool() as p:
-        d = feedparser.parse("https://loudmurmursfm.com/feed/audio.xml")
-        p.map(download_and_save, d["entries"])
+        links = p.map(download_and_save, d["entries"])
+    with open("README.md", "w+") as f:
+        f.write(README_TPL.format(links="\n".join([f"- {item}" for item in links])))
